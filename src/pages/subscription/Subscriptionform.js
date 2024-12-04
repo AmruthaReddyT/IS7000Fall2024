@@ -1,38 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import TopFiveSubscriptions from './TopFiveSubscriptions';
 
 function Subscriptionform() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [subscriptionPlans, setSubscriptionPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const subscriptionPlans = [
-    {
-      id: 'all-access',
-      name: 'All Access',
-      price: '$1.50/week',
-      billed: 'Billed as $6 every 4 weeks for the first year',
-      description: [
-        'News: Engage with expert reporting, including culture coverage and analysis.',
-        'Games: Unwind with Spelling Bee, Wordle, The Crossword and more.',
-        'Cooking: Enjoy delicious recipes, advice and inspiration daily.',
-        'Wirecutter: Choose products confidently with reviews and real-world testing.',
-        'The Athletic: Follow in-depth, personalized coverage of your favorite sports.',
-      ],
-    },
-    {
-      id: 'news',
-      name: 'News',
-      price: '$1/week',
-      billed: 'Billed as $4 every 4 weeks for the first year',
-      description: [
-        'News: Engage with expert reporting, including culture coverage and analysis.',
-        'Games: Unwind with Spelling Bee, Wordle, The Crossword and more.',
-        'Cooking: Enjoy delicious recipes, advice and inspiration daily.',
-        'Wirecutter: Choose products confidently with reviews and real-world testing.',
-        'The Athletic: Follow in-depth, personalized coverage of your favorite sports.',
-      ],
-    },
-  ];
+  useEffect(() => {
+    const fetchSubscriptionPlans = async () => {
+      try {
+        const response = await axios.get('http://3.218.8.102/api/subscriptions?page=0&size=20&sort=id,asc');
+        setSubscriptionPlans(response.data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchSubscriptionPlans();
+  }, []);
 
   const handleSubscribeNow = (plan) => {
     setSelectedPlan(plan);
@@ -41,17 +31,20 @@ function Subscriptionform() {
 
   const handlePaymentSubmit = (e) => {
     e.preventDefault();
-    console.log('Payment details submitted');
+    console.log('Payment details submitted for:', selectedPlan.name);
   };
 
-  return (
+  if (loading) {
+    return <div className="text-center mt-6">Loading...</div>;
+  }
 
+  if (error) {
+    return <div className="text-center mt-6 text-red-600">Error: {error}</div>;
+  }
+
+  return (
     <div className="bg-gray-100 min-h-screen flex flex-col items-center p-8">
       <h1 className="text-4xl font-bold mb-8 text-center text-black">Top Subscriptions</h1>
-
-      <div className="w-full max-w-2xl bg-white p-6 rounded-lg shadow-lg">
-        <TopFiveSubscriptions />
-      </div>
 
       <div className="flex justify-center items-start p-6 bg-gray-100 min-h-screen">
         {!showPaymentForm ? (
@@ -59,13 +52,15 @@ function Subscriptionform() {
             {subscriptionPlans.map((plan) => (
               <div key={plan.id} className="bg-white p-6 rounded-lg shadow-lg">
                 <h3 className="text-lg font-semibold text-center">{plan.name}</h3>
-                <p className="text-center text-xl font-bold">{plan.price}</p>
-                <p className="text-center text-sm text-gray-500">{plan.billed}</p>
-                <ul className="mt-4 list-disc list-inside text-sm text-gray-600">
-                  {plan.description.map((feature, index) => (
-                    <li key={index}>{feature}</li>
-                  ))}
-                </ul>
+                <p className="text-center text-xl font-bold">
+                  ${plan.service?.price?.toFixed(2) || 'N/A'}
+                </p>
+                <p className="text-center text-sm text-gray-500">
+                  Subscription Date: {new Date(plan.subdate).toLocaleDateString() || 'N/A'}
+                </p>
+                <p className="text-center text-gray-600">
+                  Status: {plan.status || 'N/A'}
+                </p>
                 <button
                   onClick={() => handleSubscribeNow(plan)}
                   className="w-full mt-6 bg-black text-white py-2 rounded-md font-semibold"
@@ -79,8 +74,8 @@ function Subscriptionform() {
           <div className="bg-white shadow-lg p-8 rounded-lg w-full max-w-2xl">
             <h1 className="text-2xl font-bold mb-6">Complete Your Subscription</h1>
             <h2 className="text-lg font-semibold mb-4">{selectedPlan.name}</h2>
-            <p className="text-gray-700 mb-2"><strong>Price:</strong> {selectedPlan.price}</p>
-            <p className="text-gray-700 mb-4"><strong>Billed:</strong> {selectedPlan.billed}</p>
+            <p className="text-gray-700 mb-2"><strong>Price:</strong> ${selectedPlan.service?.price?.toFixed(2) || 'N/A'}</p>
+            <p className="text-gray-700 mb-4"><strong>Subscription Date:</strong> {new Date(selectedPlan.subdate).toLocaleDateString() || 'N/A'}</p>
 
             <form onSubmit={handlePaymentSubmit} className="space-y-6">
               <div>
@@ -139,12 +134,9 @@ function Subscriptionform() {
             </form>
           </div>
         )}
-
       </div>
     </div>
   );
 }
 
-
 export default Subscriptionform;
-
