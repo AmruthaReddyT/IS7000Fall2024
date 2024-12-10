@@ -3,9 +3,8 @@ import PropTypes from 'prop-types';
 import axios from 'axios';
 
 import './Login.css';
+import {setAuthToken} from "./AuthToken";
 async function loginUser(credentials) {
-  console.log("hello")
-  console.log(JSON.stringify(credentials))
   const response = await axios.post('http://3.218.8.102/api/authenticate', credentials);
   const { id_token } = response.data;
   return id_token;
@@ -19,8 +18,10 @@ export default function Login({ setToken }) {
       username,
       password
     });
-    console.log(token)
     setToken(token);
+    localStorage.setItem("token", token);
+    setAuthToken(token);
+
   }
   return (
     <div className="login-wrapper">

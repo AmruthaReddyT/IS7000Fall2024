@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { RxHamburgerMenu } from "react-icons/rx";
 import { FaTimes } from 'react-icons/fa'
 import Login from '../pages/user/Login';
+import Logs from '../pages/admin/Logs'
 import SignUp from '../pages/user/signup';
 function Navbar() {
   // nav is starting off false
@@ -28,7 +29,7 @@ function Navbar() {
           <Link to='/signup'><li>SignUp</li></Link>
 
           <Link to='/batch'><li>Batch</li></Link>
-
+            <Link to ='/log'><li>Logging</li> </Link>
 
         </ul>
         {/* Hamburger or Close Icon */}
@@ -55,7 +56,7 @@ function Navbar() {
           <Link to='/contact'><li className='hover:text-teal-700'>Contact Us</li></Link>
           <Link to='/batch'><li className='hover:text-teal-700'>Batch</li></Link>
           <Link to='/signup'><li className='hover:text-teal-700'>Signup</li></Link>
-
+            <Link to='/log'><li className='hover:text-teal-700'>Logging</li></Link>
         </ul>
       </nav>
       {token == null ? <Login setToken={setToken} /> : null}
