@@ -1,36 +1,60 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 function DeleteSubscription() {
-  const initialSubscriptions = [
-    { id: '1', name: 'Premium Plan', price: '$15/month' },
-    { id: '2', name: 'Standard Plan', price: '$10/month' },
-    { id: '3', name: 'Basic Plan', price: '$5/month' },
-    { id: '4', name: 'Family Plan', price: '$25/month' },
-    { id: '5', name: 'Student Plan', price: '$3/month' },
-  ];
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [subscriptions, setSubscriptions] = useState(initialSubscriptions);
+  useEffect(() => {
+    const fetchSubscriptions = async () => {
+      try {
+        const response = await axios.get('http://3.218.8.102/api/subscriptions?page=0&size=20&sort=id,asc');
+        setSubscriptions(response.data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
 
-  const handleDelete = (id) => {
+    fetchSubscriptions();
+  }, []);
+
+  const handleDelete = async (id) => {
     const isConfirmed = window.confirm("Are you sure you want to delete this subscription?");
     if (isConfirmed) {
-      const updatedSubscriptions = subscriptions.filter(subscription => subscription.id !== id);
-      setSubscriptions(updatedSubscriptions);
+      try {
+        await axios.delete(`http://3.218.8.102/api/subscriptions/${id}`);
+        setSubscriptions((prev) => prev.filter((subscription) => subscription.id !== id));
+        alert('Subscription deleted successfully!');
+      } catch (err) {
+        alert('Error deleting subscription: ' + err.message);
+      }
     }
   };
+
+  if (loading) {
+    return <div className="text-center mt-6">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center mt-6 text-red-600">Error: {error}</div>;
+  }
 
   return (
     <div className="flex flex-col items-center p-8 bg-gray-100 min-h-screen">
       {subscriptions.length > 0 ? (
         <div className="w-full max-w-2xl space-y-4">
-          {subscriptions.map(subscription => (
+          {subscriptions.map((subscription) => (
             <div
               key={subscription.id}
               className="flex justify-between items-center bg-white p-4 rounded-lg shadow-md"
             >
               <div>
                 <h2 className="text-lg font-semibold">{subscription.name}</h2>
-                <p className="text-gray-600">{subscription.price}</p>
+                <p className="text-gray-600">Status: {subscription.status}</p>
+                {subscription.service && <p className="text-gray-600">Service: {subscription.service.name}</p>}
               </div>
               <button
                 onClick={() => handleDelete(subscription.id)}
@@ -48,4 +72,4 @@ function DeleteSubscription() {
   );
 }
 
-export default DeleteSubscription
+export default DeleteSubscription;
